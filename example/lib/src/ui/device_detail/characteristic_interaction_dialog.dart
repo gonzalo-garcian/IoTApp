@@ -77,10 +77,27 @@ class _CharacteristicInteractionDialogState
   }
 
   Future<void> subscribeCharacteristic() async {
+    var numbers = 0;
+    List<double> jsonList = [];
     subscribeStream =
         widget.subscribeToCharacteristic(widget.characteristic).listen((event) {
+      List<int> reversedList = new List.from(event.reversed);
+      final bytes = Uint8List.fromList(reversedList);
+      final byteData = ByteData.sublistView(bytes);
+      double value = byteData.getFloat32(0);
+      jsonList.add(value);
+      numbers++;
+      if (numbers == 6) {
+        numbers = 0;
+        print(jsonList);
+        var response = http.get(Uri.parse(
+            'https://www.perseus.cat/weather-master/api-mobile.php?temperature=${jsonList[0]}&humidity=${jsonList[1]}&air=${jsonList[2]}-${jsonList[3]}-${jsonList[4]}-${jsonList[5]}'));
+        print(response);
+        jsonList = [];
+      }
+
       setState(() {
-        subscribeOutput = event.toString();
+        subscribeOutput = value.toString();
       });
     });
     setState(() {
